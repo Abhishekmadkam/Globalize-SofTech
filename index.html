@@ -1,0 +1,1261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Globalize-SoftTech</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- AOS -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #5b6cff;
+      --muted: #9aa7c0;
+      --bg-dark: #07122a;
+      --glass: rgba(255,255,255,0.03);
+    }
+    html,body { height:100%; margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #f7fafc; color: #0b1220; scroll-behavior: smooth; }
+
+    /* NAV */
+    .navbar { transition: background .25s, padding .25s, box-shadow .25s; }
+    .navbar.scrolled { background: rgba(255,255,255,0.96); box-shadow: 0 6px 30px rgba(9,10,20,0.06); padding-top:.35rem; padding-bottom:.35rem; }
+    .navbar-dark.scrolled { background: rgba(6,9,18,0.88); }
+
+    /* HERO + 3D area */
+    #hero {
+      position: relative;
+      min-height: 78vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      padding:2.5rem 1rem;
+    }
+
+    /* the three canvas sits behind */
+    #three-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; z-index:0; }
+
+    /* overlay content */
+    .hero-overlay { position:relative; z-index:5; width:100%; max-width:1200px; }
+    .hero-title { color: white; text-shadow: 0 12px 40px rgba(3,6,16,.65); }
+    .hero-sub { color: rgba(255,255,255,0.85); }
+
+    /* course preview 3D like card */
+    .card-3d {
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      box-shadow: 0 14px 30px rgba(3,8,24,0.5);
+      padding: 1.25rem;
+      backdrop-filter: blur(6px);
+      transform-style: preserve-3d;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    /* COURSES SECTION */
+    section { padding: 4rem 0; }
+    .section-title { font-weight:700; color: #0b1220; }
+    .course-card { border-radius:12px; overflow:hidden; transition: transform .2s ease, box-shadow .2s ease; }
+    .course-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 18px 40px rgba(2,6,23,0.12); }
+    .badge-ghost { background: rgba(11,18,32,0.04); color: var(--muted); border:1px solid rgba(11,18,32,0.04); }
+    
+    /* New styles for added fields */
+    .course-thumbnail { 
+      height: 140px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .course-thumbnail-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(91,108,255,0.85), rgba(67,209,255,0.75));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 1.5rem;
+    }
+    .instructor-badge { 
+      background: rgba(91,108,255,0.1); 
+      color: var(--accent); 
+      padding: 0.25rem 0.5rem; 
+      border-radius: 4px; 
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .rating-stars { color: #ffc107; font-size: 0.9rem; }
+    .reviews-count { color: var(--muted); font-size: 0.8rem; margin-left: 0.25rem; }
+    .price-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.1); }
+    .original-price { text-decoration: line-through; color: var(--muted); font-size: 0.9rem; }
+    .discount-price { font-weight: 700; color: #dc3545; font-size: 1.1rem; }
+    .free-badge { background: #28a745; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+
+    /* COUNTERS */
+    .stat-num { font-size:2.1rem; font-weight:800; color: #0b1220; }
+    .stat-label { color: var(--muted); }
+
+    /* CONTACT */
+    .form-control:focus { box-shadow: 0 0 0 0.15rem rgba(91,108,255,0.15); border-color: var(--accent); }
+
+    /* FOOTER */
+    footer { background: #0b1220; color: #c8d6e6; padding:2.2rem 0; }
+
+    /* Back to top */
+    #backToTop { position:fixed; right:18px; bottom:18px; z-index:999; display:none; width:46px; height:46px; border-radius:50%; background:linear-gradient(90deg,var(--accent), #43d1ff); color:#07223a; border:none; box-shadow:0 10px 30px rgba(91,108,255,0.14); }
+
+    /* Theme toggle */
+    .theme-toggle { width:46px; height:28px; border-radius:14px; background: linear-gradient(90deg,#dbeafe,#f8fafc); border: 1px solid rgba(11,18,32,0.04); display:flex; align-items:center; padding:3px; gap:6px; cursor:pointer; }
+    .theme-dot { width:20px; height:20px; border-radius:50%; background: white; box-shadow: 0 2px 6px rgba(2,6,23,0.12); transition: transform .22s ease; }
+
+    /* Dark mode styles applied when body.dark */
+    body.dark { background: var(--bg-dark); color: #e6eef8; }
+    body.dark .navbar { background: rgba(6,9,18,0.45); }
+    body.dark .section-title { color: #e6eef8; }
+    body.dark .course-card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); color: #e6eef8; }
+    body.dark footer { background: #020617; color: #9fb7d9; }
+    body.dark .price-section { border-top: 1px solid rgba(255,255,255,0.1); }
+
+    /* Syllabus modal styles */
+    .syllabus-columns {
+      column-count: 2;
+      column-gap: 2rem;
+    }
+    .syllabus-item {
+      break-inside: avoid;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      background: rgba(91,108,255,0.05);
+    }
+    .syllabus-item:nth-child(odd) {
+      background: rgba(67,209,255,0.05);
+    }
+    @media (max-width: 768px) {
+      .syllabus-columns {
+        column-count: 1;
+      }
+    }
+
+    /* responsive adjustments */
+    @media (max-width: 900px) {
+      #hero { min-height: 60vh; padding:1.5rem 1rem; }
+      .hero-flex { gap:1.25rem; flex-direction:column-reverse; align-items:center; text-align:center; }
+    }
+    @media (max-width: 520px) {
+      #three-canvas { display:none; } /* disable heavy canvas on tiny screens */
+      .hero-title { font-size:1.6rem; }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="mainNav" class="navbar navbar-expand-lg navbar-light fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="#">Globalize-SoftTech</a>
+
+    <div class="d-flex align-items-center gap-2 me-2">
+      <div id="themeToggle" class="theme-toggle" role="button" aria-label="Toggle theme" tabindex="0" title="Toggle theme">
+        <div id="themeDot" class="theme-dot"></div>
+      </div>
+    </div>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navmenu" class="collapse navbar-collapse">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link active" href="#hero">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#courses">Courses</a></li>
+        <li class="nav-item"><a class="nav-link" href="#stats">Stats</a></li>
+        <li class="nav-item"><a class="nav-link" href="#testimonials">Testimonials</a></li>
+        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO: 3D Background + overlay content -->
+<header id="hero" class="d-flex" role="banner" aria-label="Hero section">
+  <canvas id="three-canvas" aria-hidden="true"></canvas>
+
+  <div class="hero-overlay container">
+    <div class="row align-items-center hero-flex">
+      <div class="col-lg-7" data-aos="fade-right">
+        <h1 class="hero-title display-5 fw-bold">Master coding with immersive, hands-on learning</h1>
+        <p class="hero-sub mb-4">Interactive previews, real projects, and mentorship — built for fast progress.</p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="btn btn-primary btn-lg" href="#courses">Explore Courses</a>
+          <a class="btn btn-outline-primary btn-lg" href="schedule-demo.html">Book Free Session</a>
+        </div>
+
+        <!-- quick search/filter -->
+        <div class="mt-4 d-flex gap-2 align-items-center">
+          <input id="quickSearch" class="form-control form-control-lg me-2" placeholder="Search courses, e.g. Python, DSA..." aria-label="Quick search">
+          <select id="quickCategory" class="form-select form-select-lg w-auto" aria-label="Category filter">
+            <option value="">All</option>
+            <option value="Programming">Programming</option>
+            <option value="Web">Web</option>
+            <option value="Data">Data</option>
+            <option value="DevOps">DevOps</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="col-lg-5 text-center" data-aos="fade-left">
+        <div id="heroPreview" class="card-3d d-inline-block" style="width:340px; max-width:90%;">
+          <div style="font-weight:700; font-size:1.15rem; color:var(--accent);">Featured: Web Development</div>
+          <div style="color:var(--muted); margin-top:.35rem;">Build real apps with HTML, CSS, JS, and Node — project-based learning.</div>
+          <div class="d-flex gap-2 justify-content-center mt-3">
+            <button id="previewEnroll" class="btn btn-primary btn-sm">Enroll</button>
+            <button id="previewDetails" class="btn btn-outline-light btn-sm">Syllabus</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- COURSES SECTION -->
+<section id="courses" aria-labelledby="coursesTitle">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 id="coursesTitle" class="section-title">Popular Courses</h2>
+      <div class="d-flex gap-2 align-items-center">
+        <select id="sortSelect" class="form-select w-auto" aria-label="Sort courses">
+          <option value="featured">Featured</option>
+          <option value="popular">Most Popular</option>
+          <option value="new">Newest</option>
+          <option value="alpha">A → Z</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="rating">Highest Rated</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- dynamic grid -->
+    <div id="coursesGrid" class="row g-4"></div>
+
+    <div class="text-center mt-4">
+      <button id="loadMore" class="btn btn-outline-primary">Load more</button>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section id="stats" class="bg-light">
+  <div class="container text-center py-4">
+    <h2 class="section-title" data-aos="fade-up">Our Impact</h2>
+    <div class="row g-4 mt-3">
+      <div class="col-md-4" data-aos="fade-up">
+        <div class="stat-num" data-target="50">0</div>
+        <div class="stat-label">Students Trained</div>
+      </div>
+      <div class="col-md-4" data-aos="fade-up" data-aos-delay="80">
+        <div class="stat-num" data-target="8">0</div>
+        <div class="stat-label">Courses</div>
+      </div>
+      <div class="col-md-4" data-aos="fade-up" data-aos-delay="160">
+        <div class="stat-num" data-target="2">0</div>
+        <div class="stat-label">Seminars</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="container">
+    <h2 class="section-title mb-3" data-aos="fade-up">What Students Say</h2>
+    <div id="tCarousel" class="carousel slide" data-bs-ride="carousel" data-aos="fade-up">
+      <div class="carousel-inner">
+        <div class="carousel-item active text-center p-4">
+          <p class="mb-2">"Interactive lessons changed how I think about coding."</p>
+          <small class="text-muted">— Riya</small>
+        </div>
+        <div class="carousel-item text-center p-4">
+          <p class="mb-2">"The 3D previews made complex ideas feel simple."</p>
+          <small class="text-muted">— Manish</small>
+        </div>
+        <div class="carousel-item text-center p-4">
+          <p class="mb-2">"Highly practical. Got me job-ready."</p>
+          <small class="text-muted">— Ananya</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT SECTION -->
+<section id="contact" class="bg-light">
+  <div class="container">
+    <h2 class="section-title mb-4" data-aos="fade-up">Contact Us</h2>
+    <form id="contactForm" action="https://formspree.io/f/mpwyqnqv" method="POST">
+      <div id="contactAlert" class="alert" style="display: none;"></div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <input required name="name" class="form-control" placeholder="Your name">
+        </div>
+        <div class="col-md-6">
+          <input required name="email" type="email" class="form-control" placeholder="Email address">
+        </div>
+        <div class="col-12">
+          <textarea required name="message" rows="5" class="form-control" placeholder="How can we help?"></textarea>
+        </div>
+        <div class="col-12 text-center">
+          <button type="submit" class="btn btn-primary px-5">Send Message</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="text-center">
+  <div class="container">
+    <div class="mb-2">© <span id="year"></span> Globalize-SoftTech · Built for learners</div>
+    <div>
+      <a href="#" class="text-muted me-2"><i class="bi bi-instagram"></i></a>
+      <a href="#" class="text-muted me-2"><i class="bi bi-linkedin"></i></a>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to top -->
+<button id="backToTop" title="Back to top" aria-label="Back to top">↑</button>
+
+<!-- Course detail modal -->
+<div class="modal fade" id="courseModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 id="modalTitle" class="modal-title"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="instructor-badge" id="modalInstructor"></span>
+          <div>
+            <span class="rating-stars" id="modalRating"></span>
+            <span class="reviews-count" id="modalReviews"></span>
+          </div>
+        </div>
+        <p id="modalSubtitle" class="text-muted"></p>
+        <div class="mt-3">
+          <strong>Level:</strong> <span id="modalLevel"></span>
+          &nbsp; • &nbsp;
+          <strong>Duration:</strong> <span id="modalDuration"></span>
+        </div>
+        <div class="price-section mt-3" id="modalPriceSection">
+          <strong>Price: </strong><span id="modalPrice"></span>
+        </div>
+        <div class="mt-4">
+          <h6>Syllabus</h6>
+          <div id="modalSyllabus" class="syllabus-columns"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modalEnrollBtn" type="button" class="btn btn-primary">Enroll Now</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- External libs: Bootstrap, AOS, Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+
+<script>
+/* ---------------------
+   Initialization
+   --------------------- */
+AOS.init({ duration: 800, once: true });
+
+document.getElementById('year').innerText = new Date().getFullYear();
+
+/* ---------------------
+   Theme toggle
+   --------------------- */
+const themeToggle = document.getElementById('themeToggle');
+const themeDot = document.getElementById('themeDot');
+const applyTheme = (mode) => {
+  if (mode === 'dark') document.body.classList.add('dark');
+  else document.body.classList.remove('dark');
+  localStorage.setItem('siteTheme', mode);
+  // visual dot
+  themeDot.style.transform = mode === 'dark' ? 'translateX(18px)' : 'translateX(0)';
+};
+const saved = localStorage.getItem('siteTheme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+applyTheme(saved);
+themeToggle.addEventListener('click', () => applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark'));
+themeToggle.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); themeToggle.click(); } });
+
+/* ---------------------
+   Navbar shrink, scrollspy, back-to-top
+   --------------------- */
+const nav = document.querySelector('.navbar');
+const backToTop = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+  backToTop.style.display = window.scrollY > 400 ? 'grid' : 'none';
+});
+backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+// simple scrollspy highlight (works with anchors)
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = Array.from(document.querySelectorAll('section,header'));
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + window.innerHeight / 4;
+  let current = sections.findIndex(sec => sec.offsetTop > y) - 1;
+  if (current < 0) current = 0;
+  navLinks.forEach(link => link.classList.remove('active'));
+  const id = sections[current].id || 'hero';
+  const activeLink = document.querySelector(`.nav-link[href="#${id}"]`);
+  if (activeLink) activeLink.classList.add('active');
+});
+
+/* ---------------------
+   Courses data (dynamic) — with expanded syllabus
+   --------------------- */
+const COURSES = [
+  { 
+    id:'c1', 
+    title:'C Programming', 
+    category:'Programming', 
+    level:'Beginner → Pro', 
+    duration:'6 weeks', 
+    popularity: 95, 
+    short:'Memory, pointers, system-level concepts.', 
+    syllabus:[
+      'Introduction to C and its History',
+      'Setting up Development Environment',
+      'Basic Syntax and Data Types',
+      'Variables and Constants',
+      'Operators and Expressions',
+      'Input/Output Functions',
+      'Control Flow: if-else statements',
+      'Loops: for, while, do-while',
+      'Functions and Parameter Passing',
+      'Arrays and Strings',
+      'Pointers and Memory Management',
+      'Dynamic Memory Allocation',
+      'Structures and Unions',
+      'File Handling in C',
+      'Preprocessor Directives',
+      'Command Line Arguments',
+      'Error Handling Techniques',
+      'Data Structures Implementation',
+      'Algorithm Design Basics',
+      'Multi-file Programming',
+      'Debugging and Testing',
+      'Performance Optimization',
+      'Best Practices and Coding Standards',
+      'Real-world Project',
+      'Advanced Topics: Bit Manipulation',
+      'System Programming Basics'
+    ],
+    instructor: 'Dr. Sarah Chen',
+    rating: 4.8,
+    reviews: 1247,
+    price: 2999,
+    discountPrice: 1999,
+    currency: '₹',
+    isFree: false,
+    thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400'
+  },
+  { 
+    id:'c2', 
+    title:'Python Programming', 
+    category:'Data', 
+    level:'Beginner → Advanced', 
+    duration:'8 weeks', 
+    popularity: 200, 
+    short:'Python basics to Machine Learning projects.', 
+    syllabus:[
+      'Introduction to Python and its Ecosystem',
+      'Setting up Python Environment',
+      'Basic Syntax and Data Types',
+      'Variables and Data Structures',
+      'Operators and Expressions',
+      'Control Flow Statements',
+      'Functions and Lambda Expressions',
+      'Modules and Packages',
+      'File Handling in Python',
+      'Exception Handling',
+      'Object-Oriented Programming Concepts',
+      'Classes and Objects',
+      'Inheritance and Polymorphism',
+      'Encapsulation and Abstraction',
+      'Decorators and Generators',
+      'List Comprehensions',
+      'Working with Databases',
+      'Regular Expressions',
+      'Web Scraping with BeautifulSoup',
+      'API Integration',
+      'Data Analysis with Pandas',
+      'Data Visualization with Matplotlib',
+      'Introduction to NumPy',
+      'Introduction to Machine Learning',
+      'Building a Web Application with Flask',
+      'Testing and Debugging',
+      'Performance Optimization',
+      'Packaging and Distribution',
+      'Working with JSON and XML',
+      'Multithreading and Multiprocessing',
+      'Real-world Project',
+      'Best Practices and PEP 8'
+    ],
+    instructor: 'Alex Johnson',
+    rating: 4.9,
+    reviews: 2890,
+    price: 3499,
+    discountPrice: 2499,
+    currency: '₹',
+    isFree: false,
+    thumbnail: 'https://images.unsplash.com/photo-1526379879527-8559ecfcaec0?w=400'
+  },
+  { 
+    id:'c3', 
+    title:'Web Development', 
+    category:'Web', 
+    level:'Beginner → Pro', 
+    duration:'10 weeks', 
+    popularity: 180, 
+    short:'HTML, CSS, JS, Node & full-stack projects.', 
+    syllabus:[
+      'Introduction to Web Development',
+      'How the Web Works',
+      'HTML5 Fundamentals',
+      'Semantic HTML',
+      'CSS3 Basics and Selectors',
+      'Box Model and Layout',
+      'Flexbox Layout System',
+      'CSS Grid Layout',
+      'Responsive Web Design',
+      'CSS Frameworks: Bootstrap',
+      'JavaScript Fundamentals',
+      'DOM Manipulation',
+      'Events and Event Handling',
+      'Asynchronous JavaScript',
+      'AJAX and Fetch API',
+      'ES6+ Features',
+      'Introduction to Node.js',
+      'NPM and Package Management',
+      'Express.js Framework',
+      'RESTful API Design',
+      'Database Integration with MongoDB',
+      'Authentication and Authorization',
+      'Session Management',
+      'Frontend Frameworks: React.js',
+      'State Management',
+      'Component-Based Architecture',
+      'Single Page Applications',
+      'Web Security Best Practices',
+      'Performance Optimization',
+      'Progressive Web Apps',
+      'Deployment Strategies',
+      'Version Control with Git',
+      'Real-world Project',
+      'Testing and Debugging',
+      'Web Accessibility Standards'
+    ],
+    instructor: 'Mike Thompson',
+    rating: 4.7,
+    reviews: 2156,
+    price: 3999,
+    discountPrice: 2999,
+    currency: '₹',
+    isFree: false,
+    thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400'
+  },
+  { 
+    id:'c4', 
+    title:'Data Structures & Algorithms', 
+    category:'Programming', 
+    level:'Intermediate → Advanced', 
+    duration:'12 weeks', 
+    popularity: 220, 
+    short:'DSA for interviews & competitive programming.', 
+    syllabus:[
+      'Introduction to Algorithms',
+      'Time and Space Complexity Analysis',
+      'Arrays and Strings',
+      'Linked Lists: Singly, Doubly, Circular',
+      'Stacks and Queues',
+      'Hash Tables and Hashing',
+      'Trees: Binary Trees, BST, AVL',
+      'Tree Traversal Algorithms',
+      'Heaps and Priority Queues',
+      'Graphs: Representation and Traversal',
+      'Shortest Path Algorithms',
+      'Minimum Spanning Trees',
+      'Divide and Conquer Strategy',
+      'Sorting Algorithms',
+      'Searching Algorithms',
+      'Dynamic Programming',
+      'Greedy Algorithms',
+      'Backtracking Algorithms',
+      'Recursion and Memoization',
+      'Bit Manipulation',
+      'String Algorithms',
+      'Mathematical Algorithms',
+      'Geometric Algorithms',
+      'Advanced Data Structures',
+      'Algorithm Design Patterns',
+      'Problem Solving Strategies',
+      'Competitive Programming Techniques',
+      'Interview Preparation',
+      'System Design Basics',
+      'Real-world Applications',
+      'Performance Tuning',
+      'Memory Management',
+      'Parallel Algorithms',
+      'Algorithm Visualization',
+      'Case Studies: Real Problems'
+    ],
+    instructor: 'Prof. Raj Kumar',
+    rating: 4.9,
+    reviews: 3421,
+    price: 4499,
+    discountPrice: 3499,
+    currency: '₹',
+    isFree: false,
+    thumbnail: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400'
+  },
+  { 
+    id:'c5', 
+    title:'Machine Learning', 
+    category:'Data', 
+    level:'Intermediate', 
+    duration:'10 weeks', 
+    popularity: 160, 
+    short:'Hands-on ML with TensorFlow & scikit-learn.', 
+    syllabus:[
+      'Introduction to Machine Learning',
+      'Python for Data Science',
+      'NumPy and Pandas',
+      'Data Visualization with Matplotlib and Seaborn',
+      'Statistics for Machine Learning',
+      'Probability Theory',
+      'Linear Algebra for ML',
+      'Data Preprocessing',
+      'Feature Engineering',
+      'Feature Selection',
+      'Supervised Learning',
+      'Linear Regression',
+      'Logistic Regression',
+      'Decision Trees',
+      'Random Forests',
+      'Support Vector Machines',
+      'K-Nearest Neighbors',
+      'Model Evaluation Metrics',
+      'Cross-Validation',
+      'Hyperparameter Tuning',
+      'Unsupervised Learning',
+      'Clustering Algorithms',
+      'Dimensionality Reduction',
+      'Principal Component Analysis',
+      'Neural Networks Basics',
+      'Introduction to Deep Learning',
+      'TensorFlow and Keras',
+      'Convolutional Neural Networks',
+      'Recurrent Neural Networks',
+      'Natural Language Processing',
+      'Time Series Analysis',
+      'Ensemble Methods',
+      'Model Deployment',
+      'MLOps Basics',
+      'Real-world Project',
+      'Ethics in AI and ML'
+    ],
+    instructor: 'Dr. Emily Watson',
+    rating: 4.6,
+    reviews: 1876,
+    price: 4999,
+    discountPrice: 3999,
+    currency: '₹',
+    isFree: false,
+    thumbnail: 'https://images.unsplash.com/photo-1555255707-c07966088b7b?w=400'
+  },
+  { 
+    id:'c6', 
+    title:'Databases & SQL', 
+    category:'DevOps', 
+    level:'Beginner → Intermediate', 
+    duration:'4 weeks', 
+    popularity: 120, 
+    short:'RDBMS, NoSQL, indexing & performance.', 
+    syllabus:[
+      'Introduction to Databases',
+      'Database Management Systems',
+      'Relational Database Concepts',
+      'SQL Basics and Syntax',
+      'Data Definition Language (DDL)',
+      'Data Manipulation Language (DML)',
+      'Data Query Language (DQL)',
+      'SELECT Statements',
+      'WHERE Clauses and Filtering',
+      'JOIN Operations',
+      'Subqueries and Derived Tables',
+      'Aggregate Functions',
+      'GROUP BY and HAVING',
+      'Window Functions',
+      'Data Control Language (DCL)',
+      'Transaction Control Language (TCL)',
+      'Database Normalization',
+      'Indexing Strategies',
+      'Query Optimization',
+      'Stored Procedures and Functions',
+      'Triggers and Events',
+      'Views and Materialized Views',
+      'NoSQL Databases Introduction',
+      'MongoDB Basics',
+      'Document-based Databases',
+      'Key-Value Stores',
+      'Column-family Databases',
+      'Graph Databases',
+      'Database Security',
+      'Backup and Recovery',
+      'Database Administration Basics',
+      'Real-world Project'
+    ],
+    instructor: 'David Wilson',
+    rating: 4.5,
+    reviews: 956,
+    price: 1999,
+    discountPrice: 1499,
+    currency: '₹',
+    isFree: false,
+    thumbnail: 'https://images.unsplash.com/photo-1546054457-78fda6bf6e8e?w=400'
+  },
+  { 
+    id:'c7', 
+    title:'Cloud & DevOps', 
+    category:'DevOps', 
+    level:'Intermediate', 
+    duration:'6 weeks', 
+    popularity: 140, 
+    short:'CI/CD, Docker, Kubernetes & cloud basics.', 
+    syllabus:[
+      'Introduction to DevOps',
+      'Cloud Computing Fundamentals',
+      'AWS/Azure/GCP Overview',
+      'Infrastructure as Code',
+      'Version Control with Git',
+      'Continuous Integration',
+      'Continuous Deployment',
+      'Jenkins Pipeline',
+      'Docker Containerization',
+      'Docker Compose',
+      'Container Orchestration',
+      'Kubernetes Fundamentals',
+      'Kubernetes Pods and Services',
+      'Kubernetes Deployments',
+      'Helm Package Manager',
+      'Monitoring and Logging',
+      'Infrastructure Monitoring',
+      'Application Performance Monitoring',
+      'Configuration Management',
+      'Ansible Automation',
+      'Terraform for Infrastructure',
+      'Cloud Security Best Practices',
+      'Identity and Access Management',
+      'Networking in Cloud',
+      'Load Balancing',
+      'Auto Scaling',
+      'Disaster Recovery',
+      'Cost Optimization',
+      'Serverless Computing',
+      'Microservices Architecture',
+      'API Gateway',
+      'Message Queues',
+      'Real-world Project',
+      'DevOps Culture and Practices'
+    ],
+    instructor: 'Sarah Martinez',
+    rating: 4.8,
+    reviews: 1324,
+    price: 3999,
+    discountPrice: 2999,
+    currency: '₹',
+    isFree: false,
+    thumbnail: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400'
+  },
+  { 
+    id:'c8', 
+    title:'React & Frontend', 
+    category:'Web', 
+    level:'Intermediate', 
+    duration:'6 weeks', 
+    popularity: 170, 
+    short:'Modern frontend with React, hooks & performance.', 
+    syllabus:[
+      'Introduction to React',
+      'React Ecosystem',
+      'JSX Syntax',
+      'Components and Props',
+      'State and Lifecycle',
+      'Event Handling',
+      'Conditional Rendering',
+      'Lists and Keys',
+      'Forms and Form Validation',
+      'Component Composition',
+      'Thinking in React',
+      'Hooks: useState, useEffect',
+      'Custom Hooks',
+      'Context API',
+      'React Router',
+      'State Management',
+      'Redux Fundamentals',
+      'Redux Toolkit',
+      'Middleware in Redux',
+      'API Integration',
+      'Error Boundaries',
+      'Code Splitting',
+      'Performance Optimization',
+      'Testing React Applications',
+      'React Best Practices',
+      'Styled Components',
+      'CSS-in-JS',
+      'Server-Side Rendering',
+      'Next.js Framework',
+      'Static Site Generation',
+      'Progressive Web Apps with React',
+      'React Native Basics',
+      'Deployment Strategies',
+      'Real-world Project: Social Media App',
+      'Advanced Patterns and Techniques'
+    ],
+    instructor: 'Chris Lee',
+    rating: 4.7,
+    reviews: 1987,
+    price: 2999,
+    discountPrice: 0,
+    currency: '₹',
+    isFree: true,
+    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400'
+  }
+];
+
+let currentLoaded = 6;
+
+/* ---------------------
+   Render courses dynamically with new fields
+   --------------------- */
+const coursesGrid = document.getElementById('coursesGrid');
+const createCourseCard = (c) => {
+  const col = document.createElement('div');
+  col.className = 'col-md-4';
+  
+  // Generate star rating HTML
+  const stars = generateStars(c.rating);
+  
+  // Generate price HTML
+  const priceHTML = generatePriceHTML(c);
+  
+  col.innerHTML = `
+    <div class="card course-card h-100" role="article" tabindex="0" aria-labelledby="title-${c.id}">
+      <div class="course-thumbnail" style="background-image: url('${c.thumbnail}')">
+        <div class="course-thumbnail-overlay">
+          ${abbr(c.title)}
+        </div>
+      </div>
+      <div class="card-body">
+        <h5 id="title-${c.id}" class="card-title">${c.title}</h5>
+        <p class="text-muted small mb-2">${c.short}</p>
+        
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="instructor-badge">${c.instructor}</span>
+          <div>
+            <span class="rating-stars">${stars}</span>
+            <span class="reviews-count">(${c.reviews.toLocaleString()})</span>
+          </div>
+        </div>
+        
+        ${priceHTML}
+        
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <div>
+            <span class="badge badge-ghost">${c.level}</span>
+            <span class="badge bg-light text-dark ms-1">${c.duration}</span>
+          </div>
+          <div>
+            <button class="btn btn-sm btn-outline-primary me-1" data-action="details" data-id="${c.id}">Details</button>
+            <button class="btn btn-sm btn-primary" data-action="enroll" data-id="${c.id}">Enroll</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  return col;
+};
+
+function abbr(title){
+  return title.split(' ').slice(0,2).map(s => s[0]).join('').toUpperCase();
+}
+
+function generateStars(rating) {
+  let stars = '';
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  
+  for (let i = 0; i < fullStars; i++) {
+    stars += '<i class="bi bi-star-fill"></i>';
+  }
+  if (hasHalfStar) {
+    stars += '<i class="bi bi-star-half"></i>';
+  }
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  for (let i = 0; i < emptyStars; i++) {
+    stars += '<i class="bi bi-star"></i>';
+  }
+  return stars;
+}
+
+function generatePriceHTML(course) {
+  if (course.isFree) {
+    return `<div class="price-section"><span class="free-badge">FREE</span></div>`;
+  } else if (course.discountPrice && course.discountPrice < course.price) {
+    return `
+      <div class="price-section">
+        <span class="original-price">${course.currency}${course.price.toLocaleString()}</span>
+        <span class="discount-price ms-2">${course.currency}${course.discountPrice.toLocaleString()}</span>
+      </div>
+    `;
+  } else {
+    return `<div class="price-section"><strong>${course.currency}${course.price.toLocaleString()}</strong></div>`;
+  }
+}
+
+function renderCourses(filter = {}, sort = 'featured') {
+  coursesGrid.innerHTML = '';
+  let list = COURSES.slice();
+
+  // filter
+  if (filter.q) {
+    const q = filter.q.toLowerCase();
+    list = list.filter(c => (c.title + ' ' + c.short + ' ' + c.category + ' ' + c.instructor).toLowerCase().includes(q));
+  }
+  if (filter.category) {
+    list = list.filter(c => c.category === filter.category);
+  }
+
+  // sort
+  if (sort === 'popular') list.sort((a,b) => b.popularity - a.popularity);
+  else if (sort === 'alpha') list.sort((a,b) => a.title.localeCompare(b.title));
+  else if (sort === 'new') list = list.reverse();
+  else if (sort === 'price-low') list.sort((a,b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+  else if (sort === 'price-high') list.sort((a,b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+  else if (sort === 'rating') list.sort((a,b) => b.rating - a.rating);
+
+  // slice
+  const toRender = list.slice(0, currentLoaded);
+  toRender.forEach(c => coursesGrid.appendChild(createCourseCard(c)));
+
+  // update loadMore visibility
+  document.getElementById('loadMore').style.display = list.length > currentLoaded ? 'inline-block' : 'none';
+}
+
+/* initial render */
+renderCourses({}, 'featured');
+
+/* events: load more */
+document.getElementById('loadMore').addEventListener('click', () => {
+  currentLoaded += 6;
+  const q = document.getElementById('quickSearch').value.trim();
+  const cat = document.getElementById('quickCategory').value;
+  const sort = document.getElementById('sortSelect').value;
+  renderCourses({q, category: cat}, sort);
+});
+
+/* search, filter, sort */
+const quickSearch = document.getElementById('quickSearch');
+const quickCategory = document.getElementById('quickCategory');
+const sortSelect = document.getElementById('sortSelect');
+
+let filterTimeout;
+[quickSearch, quickCategory, sortSelect].forEach(el => {
+  el.addEventListener('input', () => {
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+      const q = quickSearch.value.trim();
+      const cat = quickCategory.value;
+      const sort = sortSelect.value;
+      currentLoaded = 6;
+      renderCourses({q, category: cat}, sort);
+    }, 220);
+  });
+});
+
+/* click handlers for enroll/details (event delegation) */
+coursesGrid.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+  const course = COURSES.find(x => x.id === id);
+  if (action === 'enroll') {
+    enrollCourse(course);
+  } else if (action === 'details') {
+    openCourseModal(course);
+  }
+});
+
+/* keyboard accessibility for cards */
+coursesGrid.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.matches('.course-card')) {
+    const id = e.target.querySelector('button[data-action="details"]')?.dataset.id;
+    if (id) openCourseModal(COURSES.find(c=>c.id===id));
+  }
+});
+
+/* enroll function - redirects to schedule-demo.html */
+function enrollCourse(course) {
+  // Store course info in sessionStorage for the next page
+  sessionStorage.setItem('selectedCourse', JSON.stringify({
+    title: course.title,
+    price: course.discountPrice || course.price,
+    currency: course.currency,
+    isFree: course.isFree
+  }));
+  
+  // Redirect to schedule demo page
+  window.location.href = 'schedule-demo.html';
+}
+
+/* modal: open details */
+const courseModal = new bootstrap.Modal(document.getElementById('courseModal'));
+function openCourseModal(course) {
+  document.getElementById('modalTitle').innerText = course.title;
+  document.getElementById('modalInstructor').innerText = `Instructor: ${course.instructor}`;
+  document.getElementById('modalRating').innerHTML = generateStars(course.rating);
+  document.getElementById('modalReviews').innerText = `(${course.reviews.toLocaleString()} reviews)`;
+  document.getElementById('modalSubtitle').innerText = course.short;
+  document.getElementById('modalLevel').innerText = course.level;
+  document.getElementById('modalDuration').innerText = course.duration;
+  
+  const sy = document.getElementById('modalSyllabus');
+  sy.innerHTML = course.syllabus.map(s => `<div class="syllabus-item">${s}</div>`).join('');
+  
+  const priceSection = document.getElementById('modalPriceSection');
+  if (course.isFree) {
+    priceSection.innerHTML = '<strong>Price: </strong><span class="free-badge">FREE</span>';
+  } else if (course.discountPrice && course.discountPrice < course.price) {
+    priceSection.innerHTML = `
+      <strong>Price: </strong>
+      <span class="original-price">${course.currency}${course.price.toLocaleString()}</span>
+      <span class="discount-price ms-2">${course.currency}${course.discountPrice.toLocaleString()}</span>
+    `;
+  } else {
+    priceSection.innerHTML = `<strong>Price: </strong><span>${course.currency}${course.price.toLocaleString()}</span>`;
+  }
+  
+  document.getElementById('modalEnrollBtn').onclick = () => enrollCourse(course);
+  courseModal.show();
+}
+
+/* preview buttons in hero */
+document.getElementById('previewDetails').addEventListener('click', () => openCourseModal(COURSES.find(c => c.title.includes('Web') || c.id==='c3')));
+document.getElementById('previewEnroll').addEventListener('click', () => enrollCourse(COURSES.find(c => c.title.includes('Web') || c.id==='c3')));
+
+/* ---------------------
+   Counters animation (intersection observer)
+   --------------------- */
+const statEls = document.querySelectorAll('.stat-num');
+const statObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const target = +el.dataset.target;
+      let count = 0;
+      const step = Math.max(1, Math.floor(target / 150));
+      const tick = () => {
+        count += step;
+        if (count >= target) { el.innerText = target.toLocaleString(); return; }
+        el.innerText = count.toLocaleString();
+        requestAnimationFrame(tick);
+      };
+      tick();
+      statObserver.unobserve(el);
+    }
+  });
+}, {threshold: 0.4});
+statEls.forEach(e => statObserver.observe(e));
+
+/* ---------------------
+   Contact form with Formspree
+   --------------------- */
+document.getElementById("contactForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  let form = e.target;
+  let alertBox = document.getElementById("contactAlert");
+
+  let response = await fetch(form.action, {
+    method: "POST",
+    body: new FormData(form),
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (response.ok) {
+    alertBox.style.display = "block";
+    alertBox.className = "alert alert-success";
+    alertBox.innerText = "✅ Message sent successfully!";
+    form.reset();
+  } else {
+    alertBox.style.display = "block";
+    alertBox.className = "alert alert-danger";
+    alertBox.innerText = "❌ Oops! Something went wrong. Try again.";
+  }
+});
+
+/* ---------------------
+   3D background: Three.js particles + subtle wave
+   (auto-disable on narrow/tiny screens)
+   --------------------- */
+(function initThree(){
+  const canvas = document.getElementById('three-canvas');
+  if (!canvas) return;
+  // disable on small screens to save CPU/battery
+  if (window.innerWidth < 600) { canvas.style.display = 'none'; return; }
+
+  // basic setup
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const resize = () => {
+    const rect = canvas.getBoundingClientRect();
+    const w = window.innerWidth;
+    const h = Math.max(window.innerHeight * 0.78, 480);
+    canvas.width = w;
+    canvas.height = h;
+    renderer.setSize(w, h);
+  };
+  resize();
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x07122a, 0.001);
+
+  const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 2000);
+  camera.position.set(0, 12, 48);
+
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x0b2336, 0.6);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+  dir.position.set(20, 40, 10);
+  scene.add(dir);
+
+  // particle field
+  const particleCount = 450;
+  const geom = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+  const sizes = new Float32Array(particleCount);
+  for (let i=0;i<particleCount;i++){
+    positions[i*3 + 0] = (Math.random() - 0.5) * 200;
+    positions[i*3 + 1] = (Math.random() - 0.2) * 60;
+    positions[i*3 + 2] = (Math.random() - 0.5) * 160;
+    sizes[i] = Math.random() * 1.6 + 0.4;
+  }
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.2, transparent: true, opacity: 0.12 });
+  const points = new THREE.Points(geom, pMat);
+  scene.add(points);
+
+  // floating tiles (thin rounded-like boxes)
+  const boxGeom = new THREE.BoxGeometry(10, 4, 0.6);
+  const tilesGroup = new THREE.Group();
+  const colors = [0x5b6cff, 0x06b6d4, 0xfb7185, 0xa78bfa, 0xf59e0b, 0x34d399];
+  const tiles = [];
+  for (let i=0;i<6;i++){
+    const material = new THREE.MeshStandardMaterial({ color: colors[i % colors.length], metalness: 0.12, roughness: 0.4, emissive: 0x000000, opacity: 0.98, transparent: true });
+    const m = new THREE.Mesh(boxGeom.clone(), material);
+    m.position.set((Math.random()-0.5)*36, (i-2.5)*1.6 + Math.random(), (Math.random()-0.5)*36);
+    m.rotation.set( (Math.random()*0.2)-0.1, (Math.random()*1.2)-0.6, (Math.random()*0.03)-0.015 );
+    m.scale.set(1,1,1);
+    tilesGroup.add(m);
+    tiles.push(m);
+  }
+  scene.add(tilesGroup);
+
+  // mouse orbit/parallax
+  let mouseX = 0, mouseY = 0;
+  window.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  // animate
+  let last = performance.now();
+  function animate(now){
+    const dt = (now - last) * 0.001;
+    last = now;
+
+    // rotate tiles slowly and bob
+    tiles.forEach((t,i) => {
+      t.rotation.y += 0.003 * (1 + i*0.06);
+      t.position.y += Math.sin(now * 0.001 + i) * 0.002;
+    });
+
+    // group reaction to mouse
+    tilesGroup.rotation.y += (mouseX * 0.05 - tilesGroup.rotation.y) * 0.06;
+    tilesGroup.rotation.x += (mouseY * 0.02 - tilesGroup.rotation.x) * 0.02;
+
+    // pointcloud slow rotation
+    points.rotation.y += 0.0009;
+
+    // camera small parallax
+    camera.position.x += (mouseX * 8 - camera.position.x) * 0.02;
+    camera.position.y += (mouseY * 6 - camera.position.y) * 0.02;
+    camera.lookAt(0,0,-10);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  // resize handling
+  window.addEventListener('resize', () => {
+    resize();
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+  });
+
+})(); // end Three init
+
+/* ---------------------
+   Utilities
+   --------------------- */
+// helper: quick details for courses already handled above
+
+/* ---------------------
+   Small enhancements: keyboard nav for modal, highlight active nav, etc.
+   --------------------- */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const mod = document.querySelector('.modal.show');
+    if (mod) bootstrap.Modal.getInstance(mod).hide();
+  }
+});
+
+/* ---------------------
+   Done
+   --------------------- */
+</script>
+</body>
+</html>
