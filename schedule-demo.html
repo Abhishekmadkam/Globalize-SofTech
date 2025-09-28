@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Globalize-SoftTech/Schedule</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- AOS -->
+  <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #5b6cff;
+      --muted: #9aa7c0;
+      --bg-dark: #07122a;
+      --glass: rgba(255,255,255,0.03);
+    }
+    html,body { 
+      height:100%; 
+      margin:0; 
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; 
+      background: #f7fafc; 
+      color: #0b1220; 
+      scroll-behavior: smooth; 
+    }
+
+    /* NAV */
+    .navbar { transition: background .25s, padding .25s, box-shadow .25s; }
+    .navbar.scrolled { background: rgba(255,255,255,0.96); box-shadow: 0 6px 30px rgba(9,10,20,0.06); padding-top:.35rem; padding-bottom:.35rem; }
+    .navbar-dark.scrolled { background: rgba(6,9,18,0.88); }
+
+    /* HERO + 3D area */
+    #hero {
+      position: relative;
+      min-height: 78vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      padding:2.5rem 1rem;
+    }
+
+    /* the three canvas sits behind */
+    #three-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; z-index:0; }
+
+    /* overlay content */
+    .hero-overlay { position:relative; z-index:5; width:100%; max-width:1200px; }
+    .hero-title { color: white; text-shadow: 0 12px 40px rgba(3,6,16,.65); }
+    .hero-sub { color: rgba(255,255,255,0.85); }
+
+    /* course preview 3D like card */
+    .card-3d {
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      box-shadow: 0 14px 30px rgba(3,8,24,0.5);
+      padding: 1.25rem;
+      backdrop-filter: blur(6px);
+      transform-style: preserve-3d;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    /* FORM SECTION */
+    section { padding: 4rem 0; }
+    .section-title { font-weight:700; color: #0b1220; }
+    
+    .form-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      padding: 2.5rem;
+    }
+    
+    .form-control:focus { box-shadow: 0 0 0 0.15rem rgba(91,108,255,0.15); border-color: var(--accent); }
+    
+    .course-option {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .course-option:hover {
+      border-color: var(--accent);
+      background-color: rgba(91,108,255,0.03);
+    }
+    
+    .course-option.selected {
+      border-color: var(--accent);
+      background-color: rgba(91,108,255,0.08);
+    }
+    
+    .course-option input {
+      margin-right: 10px;
+    }
+
+    /* FOOTER */
+    footer { background: #0b1220; color: #c8d6e6; padding:2.2rem 0; }
+
+    /* Back to top */
+    #backToTop { position:fixed; right:18px; bottom:18px; z-index:999; display:none; width:46px; height:46px; border-radius:50%; background:linear-gradient(90deg,var(--accent), #43d1ff); color:#07223a; border:none; box-shadow:0 10px 30px rgba(91,108,255,0.14); }
+
+    /* Theme toggle */
+    .theme-toggle { width:46px; height:28px; border-radius:14px; background: linear-gradient(90deg,#dbeafe,#f8fafc); border: 1px solid rgba(11,18,32,0.04); display:flex; align-items:center; padding:3px; gap:6px; cursor:pointer; }
+    .theme-dot { width:20px; height:20px; border-radius:50%; background: white; box-shadow: 0 2px 6px rgba(2,6,23,0.12); transition: transform .22s ease; }
+
+    /* Dark mode styles applied when body.dark */
+    body.dark { background: var(--bg-dark); color: #e6eef8; }
+    body.dark .navbar { background: rgba(6,9,18,0.45); }
+    body.dark .section-title { color: #e6eef8; }
+    body.dark .form-container { background: rgba(255,255,255,0.05); }
+    body.dark footer { background: #020617; color: #9fb7d9; }
+
+    /* responsive adjustments */
+    @media (max-width: 900px) {
+      #hero { min-height: 60vh; padding:1.5rem 1rem; }
+      .hero-flex { gap:1.25rem; flex-direction:column-reverse; align-items:center; text-align:center; }
+    }
+    @media (max-width: 520px) {
+      #three-canvas { display:none; } /* disable heavy canvas on tiny screens */
+      .hero-title { font-size:1.6rem; }
+      .form-container { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="mainNav" class="navbar navbar-expand-lg navbar-light fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html">Globalize-SoftTech</a>
+
+    <div class="d-flex align-items-center gap-2 me-2">
+      <div id="themeToggle" class="theme-toggle" role="button" aria-label="Toggle theme" tabindex="0" title="Toggle theme">
+        <div id="themeDot" class="theme-dot"></div>
+      </div>
+    </div>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navmenu" class="collapse navbar-collapse">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="index.html#courses">Courses</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#schedule-demo">Schedule Demo</a></li>
+        <li class="nav-item"><a class="nav-link" href="index.html#contact">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO: 3D Background + overlay content -->
+<header id="hero" class="d-flex" role="banner" aria-label="Hero section">
+  <canvas id="three-canvas" aria-hidden="true"></canvas>
+
+  <div class="hero-overlay container">
+    <div class="row align-items-center hero-flex">
+      <div class="col-lg-7" data-aos="fade-right">
+        <h1 class="hero-title display-5 fw-bold">Schedule a Demo Session</h1>
+        <p class="hero-sub mb-4">Experience our immersive learning platform firsthand. Book a free demo session tailored to your interests.</p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="btn btn-primary btn-lg" href="#schedule-demo">Fill Form</a>
+          <a class="btn btn-outline-primary btn-lg" href="index.html">Back to Home</a>
+        </div>
+      </div>
+
+      <div class="col-lg-5 text-center" data-aos="fade-left">
+        <div id="heroPreview" class="card-3d d-inline-block" style="width:340px; max-width:90%;">
+          <div style="font-weight:700; font-size:1.15rem; color:var(--accent);">What to Expect</div>
+          <div style="color:var(--muted); margin-top:.35rem;">Interactive platform tour, course preview, Q&A session, and personalized guidance.</div>
+          <div class="d-flex gap-2 justify-content-center mt-3">
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('schedule-demo').scrollIntoView({behavior: 'smooth'})">Get Started</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- SCHEDULE DEMO FORM SECTION -->
+<section id="schedule-demo" aria-labelledby="demoTitle">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 id="demoTitle" class="section-title" data-aos="fade-up">Schedule Your Demo</h2>
+      <p class="text-muted" data-aos="fade-up" data-aos-delay="100">Fill out the form below and we'll contact you to schedule your personalized demo session.</p>
+    </div>
+
+    <div class="form-container" data-aos="fade-up" data-aos-delay="200">
+      <form id="demoForm" action="https://formspree.io/f/mpwyqnqv" method="POST">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="name" class="form-label">Full Name *</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+          <div class="col-md-6">
+            <label for="email" class="form-label">Email Address *</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+          <div class="col-md-6">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="phone" name="phone">
+          </div>
+          <div class="col-md-6">
+            <label for="country" class="form-label">Country</label>
+            <input type="text" class="form-control" id="country" name="country">
+          </div>
+          
+          <div class="col-12">
+            <label class="form-label">Which course are you interested in? *</label>
+            <div id="courseOptions">
+              <div class="course-option">
+                <input type="radio" id="c1" name="course" value="C Programming" required>
+                <label for="c1" class="form-check-label fw-bold">C Programming</label>
+                <p class="mb-0 text-muted small">Memory, pointers, system-level concepts.</p>
+              </div>
+              <div class="course-option">
+                <input type="radio" id="c2" name="course" value="Python Programming">
+                <label for="c2" class="form-check-label fw-bold">Python Programming</label>
+                <p class="mb-0 text-muted small">Python basics to Machine Learning projects.</p>
+              </div>
+              <div class="course-option">
+                <input type="radio" id="c3" name="course" value="Web Development">
+                <label for="c3" class="form-check-label fw-bold">Web Development</label>
+                <p class="mb-0 text-muted small">HTML, CSS, JS, Node & full-stack projects.</p>
+              </div>
+              <div class="course-option">
+                <input type="radio" id="c4" name="course" value="Data Structures & Algorithms">
+                <label for="c4" class="form-check-label fw-bold">Data Structures & Algorithms</label>
+                <p class="mb-0 text-muted small">DSA for interviews & competitive programming.</p>
+              </div>
+              <div class="course-option">
+                <input type="radio" id="c5" name="course" value="Machine Learning">
+                <label for="c5" class="form-check-label fw-bold">Machine Learning</label>
+                <p class="mb-0 text-muted small">Hands-on ML with TensorFlow & scikit-learn.</p>
+              </div>
+              <div class="course-option">
+                <input type="radio" id="c6" name="course" value="Databases & SQL">
+                <label for="c6" class="form-check-label fw-bold">Databases & SQL</label>
+                <p class="mb-0 text-muted small">RDBMS, NoSQL, indexing & performance.</p>
+              </div>
+              <div class="course-option">
+                <input type="radio" id="c7" name="course" value="Cloud & DevOps">
+                <label for="c7" class="form-check-label fw-bold">Cloud & DevOps</label>
+                <p class="mb-0 text-muted small">CI/CD, Docker, Kubernetes & cloud basics.</p>
+              </div>
+              <div class="course-option">
+                <input type="radio" id="c8" name="course" value="React & Frontend">
+                <label for="c8" class="form-check-label fw-bold">React & Frontend</label>
+                <p class="mb-0 text-muted small">Modern frontend with React, hooks & performance.</p>
+              </div>
+              <div class="course-option">
+                <input type="radio" id="notsure" name="course" value="Not Sure Yet">
+                <label for="notsure" class="form-check-label fw-bold">Not Sure Yet - Need Guidance</label>
+                <p class="mb-0 text-muted small">I'd like to discuss options with an advisor.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-12">
+            <label for="experience" class="form-label">Current Experience Level</label>
+            <select class="form-select" id="experience" name="experience">
+              <option value="">Select your experience level</option>
+              <option value="Beginner">Beginner (just starting)</option>
+              <option value="Intermediate">Intermediate (some coding experience)</option>
+              <option value="Advanced">Advanced (experienced coder)</option>
+            </select>
+          </div>
+          
+          <div class="col-12">
+            <label for="goals" class="form-label">Your Learning Goals</label>
+            <textarea class="form-control" id="goals" name="goals" rows="3" placeholder="What do you hope to achieve with this course?"></textarea>
+          </div>
+          
+          <div class="col-md-6">
+            <label for="preferred-date" class="form-label">Preferred Demo Date</label>
+            <input type="date" class="form-control" id="preferred-date" name="preferred-date">
+          </div>
+          
+          <div class="col-md-6">
+            <label for="preferred-time" class="form-label">Preferred Time Slot</label>
+            <select class="form-select" id="preferred-time" name="preferred-time">
+              <option value="">Select preferred time</option>
+              <option value="Morning (9am-12pm)">Morning (9am-12pm)</option>
+              <option value="Afternoon (12pm-4pm)">Afternoon (12pm-4pm)</option>
+              <option value="Evening (4pm-8pm)">Evening (4pm-8pm)</option>
+            </select>
+          </div>
+          
+          <div class="col-12">
+            <label for="questions" class="form-label">Any Specific Questions?</label>
+            <textarea class="form-control" id="questions" name="questions" rows="3" placeholder="Any specific aspects you'd like to see in the demo?"></textarea>
+          </div>
+          
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter" checked>
+              <label class="form-check-label" for="newsletter">
+                Send me updates about new courses and learning resources
+              </label>
+            </div>
+          </div>
+          
+          <div class="col-12 text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg px-5">Schedule Demo</button>
+          </div>
+        </div>
+      </form>
+      
+      <div id="formAlert" class="mt-3" role="status" style="display:none;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="text-center">
+  <div class="container">
+    <div class="mb-2">© <span id="year"></span> ImmersiveHub · Built for learners</div>
+    <div>
+      <a href="#" class="text-muted me-2"><i class="bi bi-instagram"></i></a>
+      <a href="#" class="text-muted me-2"><i class="bi bi-linkedin"></i></a>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to top -->
+<button id="backToTop" title="Back to top" aria-label="Back to top">↑</button>
+
+<!-- External libs: Bootstrap, AOS, Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+
+<script>
+/* ---------------------
+   Initialization
+   --------------------- */
+AOS.init({ duration: 800, once: true });
+
+document.getElementById('year').innerText = new Date().getFullYear();
+
+/* ---------------------
+   Theme toggle
+   --------------------- */
+const themeToggle = document.getElementById('themeToggle');
+const themeDot = document.getElementById('themeDot');
+const applyTheme = (mode) => {
+  if (mode === 'dark') document.body.classList.add('dark');
+  else document.body.classList.remove('dark');
+  localStorage.setItem('siteTheme', mode);
+  // visual dot
+  themeDot.style.transform = mode === 'dark' ? 'translateX(18px)' : 'translateX(0)';
+};
+const saved = localStorage.getItem('siteTheme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+applyTheme(saved);
+themeToggle.addEventListener('click', () => applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark'));
+themeToggle.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); themeToggle.click(); } });
+
+/* ---------------------
+   Navbar shrink, scrollspy, back-to-top
+   --------------------- */
+const nav = document.querySelector('.navbar');
+const backToTop = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+  backToTop.style.display = window.scrollY > 400 ? 'grid' : 'none';
+});
+backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+// simple scrollspy highlight (works with anchors)
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = Array.from(document.querySelectorAll('section,header'));
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + window.innerHeight / 4;
+  let current = sections.findIndex(sec => sec.offsetTop > y) - 1;
+  if (current < 0) current = 0;
+  navLinks.forEach(link => link.classList.remove('active'));
+  const id = sections[current].id || 'hero';
+  const activeLink = document.querySelector(`.nav-link[href="#${id}"]`);
+  if (activeLink) activeLink.classList.add('active');
+});
+
+/* ---------------------
+   Course selection styling
+   --------------------- */
+document.querySelectorAll('.course-option input[type="radio"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    document.querySelectorAll('.course-option').forEach(option => {
+      option.classList.remove('selected');
+    });
+    
+    if (this.checked) {
+      this.closest('.course-option').classList.add('selected');
+    }
+  });
+});
+
+// Also handle click on the entire option for better UX
+document.querySelectorAll('.course-option').forEach(option => {
+  option.addEventListener('click', function(e) {
+    if (e.target.type !== 'radio') {
+      const radio = this.querySelector('input[type="radio"]');
+      radio.checked = true;
+      document.querySelectorAll('.course-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      this.classList.add('selected');
+    }
+  });
+});
+
+/* ---------------------
+   Form handling with Formspree
+   --------------------- */
+const demoForm = document.getElementById('demoForm');
+const formAlert = document.getElementById('formAlert');
+
+demoForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Simple validation
+  const requiredFields = demoForm.querySelectorAll('[required]');
+  let valid = true;
+  
+  requiredFields.forEach(field => {
+    if (!field.value.trim()) {
+      field.classList.add('is-invalid');
+      valid = false;
+    } else {
+      field.classList.remove('is-invalid');
+    }
+  });
+  
+  if (!valid) {
+    formAlert.style.display = 'block';
+    formAlert.className = 'alert alert-danger';
+    formAlert.innerText = 'Please fill in all required fields.';
+    return;
+  }
+  
+  // Show loading state
+  const submitBtn = demoForm.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+  submitBtn.disabled = true;
+  
+  try {
+    // Send form data to Formspree
+    const formData = new FormData(demoForm);
+    const response = await fetch(demoForm.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      // Success
+      formAlert.style.display = 'block';
+      formAlert.className = 'alert alert-success';
+      formAlert.innerHTML = 'Thank you! Your demo request has been submitted. We\'ll contact you shortly to schedule your session.';
+      demoForm.reset();
+      
+      // Reset course selection styling
+      document.querySelectorAll('.course-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+    } else {
+      throw new Error('Form submission failed');
+    }
+  } catch (error) {
+    // Error handling
+    formAlert.style.display = 'block';
+    formAlert.className = 'alert alert-danger';
+    formAlert.innerHTML = 'Sorry, there was an error submitting your request. Please try again or <a href="index.html#contact">contact us directly</a>.';
+  } finally {
+    // Reset button state
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+    
+    // Hide alert after 5 seconds
+    setTimeout(() => {
+      formAlert.style.display = 'none';
+    }, 5000);
+  }
+});
+
+/* ---------------------
+   3D background: Three.js particles + subtle wave
+   (auto-disable on narrow/tiny screens)
+   --------------------- */
+(function initThree(){
+  const canvas = document.getElementById('three-canvas');
+  if (!canvas) return;
+  // disable on small screens to save CPU/battery
+  if (window.innerWidth < 600) { canvas.style.display = 'none'; return; }
+
+  // basic setup
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const resize = () => {
+    const rect = canvas.getBoundingClientRect();
+    const w = window.innerWidth;
+    const h = Math.max(window.innerHeight * 0.78, 480);
+    canvas.width = w;
+    canvas.height = h;
+    renderer.setSize(w, h);
+  };
+  resize();
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x07122a, 0.001);
+
+  const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 2000);
+  camera.position.set(0, 12, 48);
+
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x0b2336, 0.6);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+  dir.position.set(20, 40, 10);
+  scene.add(dir);
+
+  // particle field
+  const particleCount = 450;
+  const geom = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+  const sizes = new Float32Array(particleCount);
+  for (let i=0;i<particleCount;i++){
+    positions[i*3 + 0] = (Math.random() - 0.5) * 200;
+    positions[i*3 + 1] = (Math.random() - 0.2) * 60;
+    positions[i*3 + 2] = (Math.random() - 0.5) * 160;
+    sizes[i] = Math.random() * 1.6 + 0.4;
+  }
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.2, transparent: true, opacity: 0.12 });
+  const points = new THREE.Points(geom, pMat);
+  scene.add(points);
+
+  // floating tiles (thin rounded-like boxes)
+  const boxGeom = new THREE.BoxGeometry(10, 4, 0.6);
+  const tilesGroup = new THREE.Group();
+  const colors = [0x5b6cff, 0x06b6d4, 0xfb7185, 0xa78bfa, 0xf59e0b, 0x34d399];
+  const tiles = [];
+  for (let i=0;i<6;i++){
+    const material = new THREE.MeshStandardMaterial({ color: colors[i % colors.length], metalness: 0.12, roughness: 0.4, emissive: 0x000000, opacity: 0.98, transparent: true });
+    const m = new THREE.Mesh(boxGeom.clone(), material);
+    m.position.set((Math.random()-0.5)*36, (i-2.5)*1.6 + Math.random(), (Math.random()-0.5)*36);
+    m.rotation.set( (Math.random()*0.2)-0.1, (Math.random()*1.2)-0.6, (Math.random()*0.03)-0.015 );
+    m.scale.set(1,1,1);
+    tilesGroup.add(m);
+    tiles.push(m);
+  }
+  scene.add(tilesGroup);
+
+  // mouse orbit/parallax
+  let mouseX = 0, mouseY = 0;
+  window.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  // animate
+  let last = performance.now();
+  function animate(now){
+    const dt = (now - last) * 0.001;
+    last = now;
+
+    // rotate tiles slowly and bob
+    tiles.forEach((t,i) => {
+      t.rotation.y += 0.003 * (1 + i*0.06);
+      t.position.y += Math.sin(now * 0.001 + i) * 0.002;
+    });
+
+    // group reaction to mouse
+    tilesGroup.rotation.y += (mouseX * 0.05 - tilesGroup.rotation.y) * 0.06;
+    tilesGroup.rotation.x += (mouseY * 0.02 - tilesGroup.rotation.x) * 0.02;
+
+    // pointcloud slow rotation
+    points.rotation.y += 0.0009;
+
+    // camera small parallax
+    camera.position.x += (mouseX * 8 - camera.position.x) * 0.02;
+    camera.position.y += (mouseY * 6 - camera.position.y) * 0.02;
+    camera.lookAt(0,0,-10);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  // resize handling
+  window.addEventListener('resize', () => {
+    resize();
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+  });
+
+})(); // end Three init
+
+/* ---------------------
+   Utilities
+   --------------------- */
+
+/* ---------------------
+   Small enhancements: keyboard nav, highlight active nav, etc.
+   --------------------- */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const mod = document.querySelector('.modal.show');
+    if (mod) bootstrap.Modal.getInstance(mod).hide();
+  }
+});
+
+/* ---------------------
+   Set minimum date for demo scheduling to today
+   --------------------- */
+window.addEventListener('load', () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const minDate = `${yyyy}-${mm}-${dd}`;
+  document.getElementById('preferred-date').min = minDate;
+});
+
+/* ---------------------
+   Done
+   --------------------- */
+</script>
+</body>
+</html>
